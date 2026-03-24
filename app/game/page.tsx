@@ -7,7 +7,7 @@ import GuessMap from '@/components/GuessMap';
 import { getRandomLocation, calculateDistance, calculateScore } from '@/utils/gameLogic';
 import { MapPin, Share2, Play, ChevronLeft } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection } from 'firebase/firestore';
 
 export default function GamePage() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export default function GamePage() {
   const [roundId, setRoundId] = useState(0);
   const [score, setScore] = useState<number | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   useEffect(() => {
     // Start game on mount
@@ -107,10 +108,45 @@ export default function GamePage() {
     setRoundId(prev => prev + 1);
   };
 
-  const handleShare = () => {
-    // Facebook sharer popup
-    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}`;
-    window.open(shareUrl, 'facebook-share-dialog', 'width=800,height=600');
+  const handleShare = async () => {
+    if (!db || distance === null || score === null || !actualLocation || !guessLocation) return;
+    setIsSharing(true);
+    try {
+      // 1. Create a share tracker document in Firestore
+      const shareDocRef = doc(collection(db, 'shares'));
+      await setDoc(shareDocRef, {
+        distance,
+        score,
+        actualLocation,
+        guessLocation,
+        createdAt: new Date().toISOString()
+      });
+
+      const shareUrl = `https://pei-guessr.vercel.app/share/${shareDocRef.id}`;
+      const shareText = `I scored ${score} points and was only ${distance.toFixed(1)} km away on RedDirtRadar! Can you beat my Island-knowledge?`;
+
+      // 2. Mobile Native Share (Pulls up OS share sheet for Facebook app, Twitter, iMessage, etc)
+      if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+        try {
+          await navigator.share({
+            title: 'RedDirtRadar',
+            text: shareText,
+            url: shareUrl
+          });
+          setIsSharing(false);
+          return;
+        } catch (e) {
+          // If they cancel out of the modal, fallback gently
+        }
+      }
+
+      // 3. Desktop Fallback (Classic Facebook Sharer popup)
+      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+      window.open(fbUrl, 'facebook-share-dialog', 'width=800,height=600');
+    } catch (e) {
+      console.error("Share error", e);
+    }
+    setIsSharing(false);
   };
 
   if (!actualLocation) {
@@ -204,9 +240,10 @@ export default function GamePage() {
               </button>
               <button 
                 onClick={handleShare}
-                className="flex-1 max-w-xs flex items-center justify-center gap-3 px-8 py-5 bg-[#1877F2] hover:bg-[#166FE5] text-white font-black rounded-full text-xl shadow-xl transition-all hover:scale-105 hover:-translate-y-1"
+                disabled={isSharing}
+                className="flex-1 max-w-xs flex items-center justify-center gap-3 px-8 py-5 bg-[#1877F2] hover:bg-[#166FE5] disabled:bg-[#1877f2]/70 text-white font-black rounded-full text-xl shadow-xl transition-all hover:scale-105 hover:-translate-y-1"
               >
-                <Share2 size={28} /> Share
+                <Share2 size={28} /> {isSharing ? 'Loading...' : 'Share'}
               </button>
             </div>
           </div>
