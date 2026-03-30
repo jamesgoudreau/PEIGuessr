@@ -107,6 +107,14 @@ export default function GuessMap({ onGuess, guessLocation, actualLocation, gameP
         )}
       </GoogleMap>
       
+      {gamePhase === 'guessing' && (
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none w-[90%] md:w-auto text-center">
+          <div className="inline-block bg-blue-900/95 text-white px-6 py-3 rounded-full shadow-xl font-bold border-2 border-blue-400 text-sm md:text-base animate-pulse">
+            Zoom in and tap the map to place your guess!
+          </div>
+        </div>
+      )}
+      
       {gamePhase === 'guessing' && markerPosition && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
           <button 

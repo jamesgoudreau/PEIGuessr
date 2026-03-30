@@ -19,15 +19,29 @@ export default function GamePage() {
   const [score, setScore] = useState<number | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [hasSnapped, setHasSnapped] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(10);
 
   useEffect(() => {
     // Start game on mount
     setActualLocation(getRandomLocation());
   }, []);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (gamePhase === 'playing' && hasSnapped && timeLeft > 0) {
+      timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+    } else if (gamePhase === 'playing' && hasSnapped && timeLeft === 0) {
+      setGamePhase('guessing');
+    }
+    return () => clearTimeout(timer);
+  }, [gamePhase, hasSnapped, timeLeft]);
+
   const handleLocationSnapped = (snapped: { lat: number; lng: number } | null) => {
     if (snapped) {
       setActualLocation(snapped);
+      setHasSnapped(true);
+      setTimeLeft(10);
     } else {
       // If the 500m radius failed to find a street view, immediately reroll!
       setActualLocation(getRandomLocation());
@@ -106,6 +120,8 @@ export default function GamePage() {
     setScore(null);
     setDistance(null);
     setRoundId(prev => prev + 1);
+    setHasSnapped(false);
+    setTimeLeft(10);
   };
 
   const handleShare = async () => {
@@ -184,7 +200,12 @@ export default function GamePage() {
 
       {/* Floating Map Button in Playing Phase */}
       {gamePhase === 'playing' && (
-        <div className="absolute bottom-8 right-8 z-20">
+        <div className="absolute bottom-8 right-8 z-20 flex flex-col items-end gap-3">
+          {hasSnapped && (
+            <div className="bg-red-600/90 text-white px-6 py-2 rounded-xl font-bold text-xl md:text-2xl border-2 border-white/50 shadow-xl animate-pulse">
+              {timeLeft}s remaining!
+            </div>
+          )}
           <button 
             onClick={() => setGamePhase('guessing')}
             className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-5 rounded-full shadow-2xl font-black text-xl md:text-2xl transition-all hover:scale-105 hover:-translate-y-1 border-4 border-white/80"
@@ -214,9 +235,9 @@ export default function GamePage() {
         <div className="absolute inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-500">
           <div className="bg-white rounded-[2rem] w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border-4 border-white">
             {/* Score Header */}
-            <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-8 text-center shrink-0 border-b-4 border-yellow-400">
-              <h2 className="text-6xl font-black mb-3 text-yellow-400 drop-shadow-md">{score} Points</h2>
-              <p className="text-2xl opacity-90 font-medium">You were {distance?.toFixed(1)} km away!</p>
+            <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 md:p-6 text-center shrink-0 border-b-4 border-yellow-400">
+              <h2 className="text-4xl md:text-5xl font-black mb-1 md:mb-2 text-yellow-400 drop-shadow-md">{score} Points</h2>
+              <p className="text-lg md:text-xl opacity-90 font-medium">You were {distance?.toFixed(1)} km away!</p>
             </div>
             
             {/* Map Result */}
