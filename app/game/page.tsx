@@ -261,12 +261,14 @@ export default function GamePage() {
       {/* Guessing Phase Overlay modal */}
       {gamePhase === 'guessing' && (
         <div className="absolute inset-4 md:inset-12 lg:inset-24 z-30 flex flex-col items-center animate-in fade-in zoom-in duration-300">
-          <div className="w-full h-full rounded-3xl overflow-hidden shadow-2xl relative border-[12px] border-white bg-white">
+          <div className="w-full h-full rounded-3xl overflow-hidden shadow-2xl relative border-[4px] md:border-[12px] border-white bg-white">
             <button 
               onClick={() => setGamePhase('playing')}
-              className="absolute top-6 left-6 z-40 bg-white/90 backdrop-blur px-6 py-3 rounded-full font-bold shadow-lg text-blue-900 hover:bg-blue-50 transition-colors border border-blue-100"
+              className="absolute top-4 left-4 md:top-6 md:left-6 z-40 bg-white/95 backdrop-blur px-3 py-2 md:px-6 md:py-3 rounded-full font-bold shadow-lg text-blue-900 hover:bg-blue-50 transition-colors border border-blue-100 flex items-center gap-1 md:gap-2"
             >
-              Back to Street View
+              <ChevronLeft size={18} />
+              <span className="hidden md:inline">Back to Street View</span>
+              <span className="inline md:hidden">Back</span>
             </button>
             <GuessMap onGuess={handleGuess} gamePhase="guessing" />
           </div>

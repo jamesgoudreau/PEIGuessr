@@ -75,6 +75,7 @@ export default function GuessMap({ onGuess, guessLocation, actualLocation, gameP
           zoomControl: true,
           streetViewControl: false,
           mapTypeControl: false,
+          clickableIcons: false,
           styles: [
             {
               featureType: "water",
@@ -116,18 +117,18 @@ export default function GuessMap({ onGuess, guessLocation, actualLocation, gameP
       </GoogleMap>
       
       {gamePhase === 'guessing' && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none w-[90%] md:w-auto text-center">
-          <div className="inline-block bg-blue-900/95 text-white px-6 py-3 rounded-full shadow-xl font-bold border-2 border-blue-400 text-sm md:text-base animate-pulse">
+        <div className="absolute top-16 md:top-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none w-[90%] md:w-auto text-center">
+          <div className="inline-block bg-blue-900/95 text-white px-4 py-2 md:px-6 md:py-3 rounded-full shadow-xl font-bold border-2 border-blue-400 text-sm md:text-base animate-pulse">
             Zoom in and tap the map to place your guess!
           </div>
         </div>
       )}
       
       {gamePhase === 'guessing' && markerPosition && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
+        <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2">
           <button 
             onClick={handleConfirmGuess}
-            className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-black text-xl rounded-full shadow-2xl transition-transform hover:scale-105"
+            className="px-6 py-3 md:px-8 md:py-4 bg-red-600 hover:bg-red-700 text-white font-black text-lg md:text-xl rounded-full shadow-[0_10px_30px_rgba(220,38,38,0.5)] transition-transform hover:scale-105 border-2 border-white/50"
           >
             Makin' My Guess!
           </button>
