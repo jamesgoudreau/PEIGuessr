@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import StreetView from '@/components/StreetView';
 import GuessMap from '@/components/GuessMap';
@@ -21,6 +21,42 @@ export default function GamePage() {
   const [isSharing, setIsSharing] = useState(false);
   const [hasSnapped, setHasSnapped] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const playBeep = useCallback((timeRemaining: number) => {
+    try {
+      if (!audioCtxRef.current) {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtxRef.current = new AudioContextClass();
+        }
+      }
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      const freq = timeRemaining === 0 ? 600 : (timeRemaining <= 3 ? 880 : 440); 
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + (timeRemaining === 0 ? 0.3 : 0.1));
+      
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      osc.start();
+      osc.stop(ctx.currentTime + (timeRemaining === 0 ? 0.3 : 0.1));
+    } catch (e) {
+      console.warn('Audio play failed', e);
+    }
+  }, []);
 
   useEffect(() => {
     // Start game on mount
@@ -30,18 +66,25 @@ export default function GamePage() {
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (gamePhase === 'playing' && hasSnapped && timeLeft > 0) {
-      timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+      timer = setTimeout(() => {
+        setTimeLeft(prev => {
+          const newTime = prev - 1;
+          playBeep(newTime);
+          return newTime;
+        });
+      }, 1000);
     } else if (gamePhase === 'playing' && hasSnapped && timeLeft === 0) {
       setGamePhase('guessing');
     }
     return () => clearTimeout(timer);
-  }, [gamePhase, hasSnapped, timeLeft]);
+  }, [gamePhase, hasSnapped, timeLeft, playBeep]);
 
   const handleLocationSnapped = (snapped: { lat: number; lng: number } | null) => {
     if (snapped) {
       setActualLocation(snapped);
       setHasSnapped(true);
       setTimeLeft(10);
+      playBeep(10); // Beep on start
     } else {
       // If the 500m radius failed to find a street view, immediately reroll!
       setActualLocation(getRandomLocation());

@@ -29,11 +29,13 @@ export default function GuessMap({ onGuess, guessLocation, actualLocation, gameP
       const bounds = new window.google.maps.LatLngBounds();
       bounds.extend(guessLocation);
       bounds.extend(actualLocation);
-      mapRef.current.fitBounds(bounds, { top: 50, bottom: 50, left: 50, right: 50 });
+      
+      const padding = window.innerWidth < 768 ? 20 : 60;
+      mapRef.current.fitBounds(bounds, padding);
       
       const listener = window.google.maps.event.addListener(mapRef.current, "idle", () => {
-        if (mapRef.current && mapRef.current.getZoom() && mapRef.current.getZoom()! > 14) {
-          mapRef.current.setZoom(14);
+        if (mapRef.current && mapRef.current.getZoom() && mapRef.current.getZoom()! > 17) {
+          mapRef.current.setZoom(17);
         }
         window.google.maps.event.removeListener(listener);
       });
@@ -92,6 +94,12 @@ export default function GuessMap({ onGuess, guessLocation, actualLocation, gameP
           <Marker 
             position={actualLocation} 
             icon="http://maps.google.com/mapfiles/ms/icons/green-dot.png" 
+          />
+        )}
+        {gamePhase === 'result' && guessLocation && (
+          <Marker 
+            position={guessLocation} 
+            icon="http://maps.google.com/mapfiles/ms/icons/red-dot.png" 
           />
         )}
         {gamePhase === 'result' && actualLocation && guessLocation && (
