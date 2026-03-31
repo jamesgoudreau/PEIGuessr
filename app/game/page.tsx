@@ -20,7 +20,7 @@ export default function GamePage() {
   const [distance, setDistance] = useState<number | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [hasSnapped, setHasSnapped] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(15);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const playBeep = useCallback((timeRemaining: number) => {
@@ -83,8 +83,8 @@ export default function GamePage() {
     if (snapped) {
       setActualLocation(snapped);
       setHasSnapped(true);
-      setTimeLeft(10);
-      playBeep(10); // Beep on start
+      setTimeLeft(15);
+      playBeep(15); // Beep on start
     } else {
       // If the 500m radius failed to find a street view, immediately reroll!
       setActualLocation(getRandomLocation());
@@ -164,7 +164,7 @@ export default function GamePage() {
     setDistance(null);
     setRoundId(prev => prev + 1);
     setHasSnapped(false);
-    setTimeLeft(10);
+    setTimeLeft(15);
   };
 
   const handleShare = async () => {
